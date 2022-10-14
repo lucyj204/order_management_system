@@ -1,7 +1,7 @@
 import unittest
 import mysql.connector
 from config import HOST, USER, PASSWORD
-from db_utils import create_order
+from db_utils import DbConnectionError, create_order
 
 class TestConnection(unittest.TestCase):
     connection = None
@@ -21,6 +21,7 @@ class TestConnection(unittest.TestCase):
 
     def test_is_connected(self):
         self.assertTrue(self.connection.is_connected())
+
 
 
 if __name__ == '__main__':

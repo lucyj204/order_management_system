@@ -1,4 +1,4 @@
 HOST = "localhost"
 USER = "root"
-PASSWORD = "*******"
+PASSWORD = "285b-hqf--IgTi0522!"
 
