@@ -1,8 +1,11 @@
+from audioop import add
 import unittest
+import unittest.mock
+import io
+import sys
 import mysql.connector
 from config import HOST, USER, PASSWORD
-from db_utils import DbConnectionError, create_order
-
+from db_utils import DbConnectionError, create_order, add_orderline
 class TestConnection(unittest.TestCase):
     connection = None
 
@@ -22,6 +25,12 @@ class TestConnection(unittest.TestCase):
     def test_is_connected(self):
         self.assertTrue(self.connection.is_connected())
 
+    def test_add_orderline(self):
+        capturedOutput = io.StringIO()
+        sys.stdout = capturedOutput
+        add_orderline('Orange', 5, 1)
+        sys.stdout = sys.__stdout__
+        print('Captured', capturedOutput.getvalue())
 
 
 if __name__ == '__main__':

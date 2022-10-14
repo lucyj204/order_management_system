@@ -63,10 +63,66 @@ def add_orderline(product_name: str, product_quantity: int, order_id: int):
             db_connection.close()
             print("DB connection is closed")
 
+
+def show_order(order_id):
+    try:
+        db_name = "order_management"
+        db_connection = connect_to_db(db_name)
+        cur = db_connection.cursor()
+        print("Connected to DB: %s" % db_name)
+
+        query = """
+        SELECT `order` . *, order_line . *
+        FROM `order`
+        INNER JOIN order_line
+        ON `order`.order_id = order_line.order_id
+        WHERE order_line.order_id = {order_id}
+        """.format(order_id=order_id)
+
+        print(query)
+        cur.execute(query)
+        result = cur.fetchall()
+        print(result)
+        db_connection.close()
+    
+    except Exception:
+        raise DbConnectionError("Failed to read data from DB")
+    
+    finally:
+        if db_connection:
+            db_connection.close()
+            print("DB connection is closed")
+
+def show_orders():
+    try:
+        db_name = "order_management"
+        db_connection = connect_to_db(db_name)
+        cur = db_connection.cursor()
+        print("Connected to DB: %s" % db_name)
+
+        query = """
+        SELECT `order` . *, order_line . *
+        FROM `order`
+        INNER JOIN order_line
+        ON `order`.order_id = order_line.order_id
+        ORDER BY `order`.order_id
+        """
+
+        print(query)
+        cur.execute(query)
+        result = cur.fetchall()
+        print(result)
+        db_connection.close()
+    
+    except Exception:
+        raise DbConnectionError("Failed to read data from DB")
+    
+    finally:
+        if db_connection:
+            db_connection.close()
+            print("DB connection is closed")
+
 if __name__ == '__main__':
-    create_order()
-    add_orderline('Orange', 5, 1)
-    add_orderline('Peach', 4, 1)
-    add_orderline('Plum', 4, 1)
+    show_orders()
 
 
