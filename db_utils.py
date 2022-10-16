@@ -22,8 +22,7 @@ def create_order():
                 VALUES ();
             """)
             db_connection.commit()
-            print('Order created with id {id}'.format(id=cur.lastrowid))
-            return cur.lastrowid
+            return 'Order created with id {id}'.format(id=cur.lastrowid)
 
 def add_orderline(product_name, product_quantity, order_id):
     with closing(connect_to_db()) as db_connection:
@@ -34,6 +33,7 @@ def add_orderline(product_name, product_quantity, order_id):
             """.format(product_name=product_name, product_quantity=product_quantity, order_id=order_id))
             db_connection.commit()
             print('{quantity} {name} added to order {id}'.format(quantity=product_quantity, name=product_name, id=order_id))
+            return '{quantity} {name} added to order {id}'.format(quantity=product_quantity, name=product_name, id=order_id)
             #TODO: Think about how to handle errors from duplicate item entered to add to order
 
 def show_order(order_id):
