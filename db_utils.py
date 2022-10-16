@@ -1,225 +1,110 @@
+from contextlib import closing
 import mysql.connector
-from config import USER, PASSWORD, HOST;
-
-from utils import format_results_for_all_orders, format_results_for_order_id
-
+from config import USER, PASSWORD, HOST, DATABASE_NAME
 class DbConnectionError(Exception):
     pass
 
-def connect_to_db(db_name):
+def connect_to_db():
     cnx = mysql.connector.connect(
         host=HOST,
         user=USER,
         password=PASSWORD,
-        auth_plugin='mysql_native_password',
-        database=db_name
+        database=DATABASE_NAME,
+        auth_plugin='mysql_native_password'
     )
     return cnx
 
 def create_order():
-    try:
-        db_name = "order_management"
-        db_connection = connect_to_db(db_name)
-        cur = db_connection.cursor()
-        print("Connected to DB: %s" % db_name)
+    with closing(connect_to_db()) as db_connection:
+        with closing(db_connection.cursor()) as cur:
+            cur.execute("""
+                INSERT INTO `order` ()
+                VALUES ();
+            """)
+            db_connection.commit()
+            print('Order created with id {id}'.format(id=cur.lastrowid))
+            return cur.lastrowid
 
-        query = """
-        INSERT INTO `order` ()
-        VALUES ();
-        """
-
-        cur.execute(query)
-        id = get_created_id()
-        print('Order created with id {id}'.format(id=id))
-        db_connection.commit()
-        cur.close()
-
-    except Exception:
-        raise DbConnectionError("Failed to connect to database")
-
-    finally:
-        if db_connection:
-            db_connection.close()
-            print("DB connection is closed")
-
-def get_created_id():
-    try:
-        db_name = "order_management"
-        db_connection = connect_to_db(db_name)
-        cur = db_connection.cursor()
-        print("Connected to DB: %s" % db_name)
-
-        query = """
-        SELECT MAX(`order`.order_id)
-        FROM `order`
-        """
-        #TODO: change query so that that we are getting correct id when first id created.
-
-        cur.execute(query)
-        result = cur.fetchall()
-        print(result)
-        db_connection.commit()
-        cur.close()
-        return result[0][0]
-    
-    except Exception:
-        raise DbConnectionError("Failed to connect to database")
-
-    finally:
-        if db_connection:
-            db_connection.close()
-            print("DB connection is closed")
-
-
-def add_orderline(product_name: str, product_quantity: int, order_id: int):
-    try:
-        db_name = "order_management"
-        db_connection = connect_to_db(db_name)
-        cur = db_connection.cursor()
-        print("Connected to DB: %s" % db_name)
-
-        query = """
-        INSERT INTO order_line (product_name, product_quantity, order_id)
-        VALUES ('{product_name}', {product_quantity}, {order_id})
-        """.format(product_name=product_name, product_quantity=product_quantity, order_id=order_id)
-
-        print(query)
-        print('{quantity} {name} added to order {id}'.format(quantity=product_quantity, name=product_name, id=order_id))
-        cur.execute(query)
-        db_connection.commit()
-        db_connection.close()
-
-    except Exception:
-        #TODO: create DBDuplicationError case if product already exists in the DB
-        raise DbConnectionError("Failed to update DB")
-    
-    finally:
-        if db_connection:
-            db_connection.close()
-            print("DB connection is closed")
-
+def add_orderline(product_name, product_quantity, order_id):
+    with closing(connect_to_db()) as db_connection:
+        with closing(db_connection.cursor()) as cur:
+            cur.execute("""
+                INSERT INTO order_line (product_name, product_quantity, order_id)
+                VALUES ('{product_name}', {product_quantity}, {order_id})
+            """.format(product_name=product_name, product_quantity=product_quantity, order_id=order_id))
+            db_connection.commit()
+            print('{quantity} {name} added to order {id}'.format(quantity=product_quantity, name=product_name, id=order_id))
+            #TODO: Think about how to handle errors from duplicate item entered to add to order
 
 def show_order(order_id):
-    try:
-        db_name = "order_management"
-        db_connection = connect_to_db(db_name)
-        cur = db_connection.cursor()
-        print("Connected to DB: %s" % db_name)
-
-        query = """
-        SELECT `order` . *, order_line . *
-        FROM `order`
-        INNER JOIN order_line
-        ON `order`.order_id = order_line.order_id
-        WHERE order_line.order_id = {order_id}
-        """.format(order_id=order_id)
-
-        print(query)
-        cur.execute(query)
-        result = cur.fetchall()
-        format_results_for_order_id(result)
-        db_connection.close()
-    
-    except Exception:
-        raise DbConnectionError("Failed to read data from DB")
-    
-    finally:
-        if db_connection:
-            db_connection.close()
-            print("DB connection is closed")
+    with closing(connect_to_db()) as db_connection:
+        with closing(db_connection.cursor()) as cur:
+            cur.execute("""
+                SELECT `order` . *, order_line . *
+                FROM `order`
+                INNER JOIN order_line
+                ON `order`.order_id = order_line.order_id
+                WHERE order_line.order_id = {order_id}
+            """.format(order_id=order_id))
+            result = cur.fetchall()
+            format_results_for_order_id(result)
+            #TODO: Handle errors if no products added to order ID
 
 def show_orders():
-    try:
-        db_name = "order_management"
-        db_connection = connect_to_db(db_name)
-        cur = db_connection.cursor()
-        print("Connected to DB: %s" % db_name)
-
-        query = """
-        SELECT ord.order_id, ord.order_status, ol.product_name, ol.product_quantity
-        FROM `order` ord
-        LEFT JOIN order_line ol ON ord.order_id = ol.order_id
-        WHERE ol.product_name IS NOT NULL
-        ORDER BY ord.order_id;
-        """
-
-        print(query)
-        cur.execute(query)
-        result = cur.fetchall()
-        format_results_for_all_orders(result)
-        # print(result)
-        # print('first result: {result[0]}'.format(result=result))
-        db_connection.close()
-    
-    except Exception:
-        raise DbConnectionError("Failed to read data from DB")
-    
-    finally:
-        if db_connection:
-            db_connection.close()
-            print("DB connection is closed")
-
+    with closing(connect_to_db()) as db_connection:
+        with closing(db_connection.cursor()) as cur:
+            cur.execute("""
+                SELECT ord.order_id, ord.order_status, ol.product_name, ol.product_quantity
+                FROM `order` ord
+                LEFT JOIN order_line ol ON ord.order_id = ol.order_id
+                WHERE ol.product_name IS NOT NULL
+                ORDER BY ord.order_id;
+            """)
+            result = cur.fetchall()
+            format_results_for_all_orders(result)
 
 def get_total_quantity_for_order_id(order_id):
-    try:
-        db_name = "order_management"
-        db_connection = connect_to_db(db_name)
-        cur = db_connection.cursor()
-        print("Connected to DB: %s" % db_name)
-
-        query = """
-        SELECT SUM(product_quantity) AS total_quantity
-        FROM order_line
-        WHERE order_id = {order_id}
-        """.format(order_id=order_id)
-
-        print(query)
-        cur.execute(query)
-        result = cur.fetchall()
-        db_connection.close()
-        return result[0][0]
-    
-    except Exception:
-        raise DbConnectionError("Failed to read data from DB")
-    
-    finally:
-        if db_connection:
-            db_connection.close()
-            print("DB connection is closed")
+    with closing(connect_to_db()) as db_connection:
+        with closing(db_connection.cursor()) as cur:
+            cur.execute("""
+                SELECT SUM(product_quantity) AS total_quantity
+                FROM order_line
+                WHERE order_id = {order_id}
+            """.format(order_id=order_id))
+            result = cur.fetchall()
+            return result[0][0]
 
 def get_total_quantity_for_all_orders():
-    try:
-        db_name = "order_management"
-        db_connection = connect_to_db(db_name)
-        cur = db_connection.cursor()
-        print("Connected to DB: %s" % db_name)
+    with closing(connect_to_db()) as db_connection:
+        with closing(db_connection.cursor()) as cur:
+            cur.execute("""
+                SELECT SUM(product_quantity) AS total_quantity
+                FROM order_line
+            """)
+            result = cur.fetchall()
+            return result[0][0]
 
-        query = """
-        SELECT SUM(product_quantity) AS total_quantity
-        FROM order_line
-        """
+def format_results_for_order_id(order):
+    total_orders = get_total_quantity_for_order_id(order[0][0])
+    print('Order {id} {status} {count}'.format(id=order[0][0], status=order[0][1], count=total_orders))
+    for product in range(len(order)):
+        print("{name} {quantity} {status}".format(name=order[product][2], quantity=order[product][3], status=order[product][1]))
+        product +=1
 
-        print(query)
-        cur.execute(query)
-        result = cur.fetchall()
-        db_connection.close()
-        return result[0][0]
-    
-    except Exception:
-        raise DbConnectionError("Failed to read data from DB")
-    
-    finally:
-        if db_connection:
-            db_connection.close()
-            print("DB connection is closed")
+def format_results_for_all_orders(order):
+    print('order is: {order}'.format(order=order))
+    total_orders = get_total_quantity_for_all_orders()
+    print('Order {id} {status} {count}'.format(id=order[0][0], status=order[0][1], count=total_orders))
+    for product in range(len(order)):
+        print("{name} {quantity} {status}".format(name=order[product][2], quantity=order[product][3], status=order[product][1]))
+        product +=1
+        #TODO: format correctly so orders are listed by ID
 
 if __name__ == '__main__':
     # create_order()
     # add_orderline('Orange', 9, 1)
-    # add_orderline('Orange', 2, 2)
+    # add_orderline('Orange', 2, 8)
+    # add_orderline('Apple', 5, 5)
     # add_orderline('', 1, 1)
     show_order(1)
-    show_orders()
-
-
-
+    # show_orders_2()
