@@ -1,10 +1,11 @@
-import time
 import unittest
 from contextlib import closing
 from config import HOST, USER, PASSWORD
-from main import process_command, create_order, add_product_order, show_order_from_order_id, show_all_orders
+from main import process_command
+import db_utils
 import mysql.connector
 
+test_database_name = "test_order_management_2"
 class TestProcessCommand(unittest.TestCase):
 
     def setUp(self):
@@ -16,6 +17,8 @@ class TestProcessCommand(unittest.TestCase):
     )
         with closing(cnx) as db_connection:
             with closing(db_connection.cursor()) as cur:
+                cur.execute("""
+                    DROP DATABASE IF EXISTS test_order_management_2""")
                 cur.execute("""
                     CREATE DATABASE test_order_management_2""")
                 cur.execute(""" 
@@ -50,6 +53,7 @@ class TestProcessCommand(unittest.TestCase):
                     ('Blueberries', 8, 3)""")
                 db_connection.commit()
                 print("db created")
+        db_utils.test_database_name = "test_order_management_2"
 
     def tearDown(self):
         cnx = mysql.connector.connect(
@@ -64,22 +68,24 @@ class TestProcessCommand(unittest.TestCase):
                     DROP DATABASE test_order_management_2
                 """)
                 db_connection.commit()
+        db_utils.test_database_name = None
 
     def test_create_order(self):
         output = process_command("CREATE_ORDER")
-        self.assertRegex(output, 'Order created with id \\d')
+        print("Output is: {output}".format(output=output))
+        self.assertRegex(output, r'Order created with id \d+')
 
     def test_add_product_order(self):
-        output = process_command("ADD_PRODUCT_ORDER 3 'Bananas' 10")
-        self.assertEqual(output, '10 Bananas added to order 3')
+        output = process_command("ADD_PRODUCT_ORDER 3 Mango 10")
+        self.assertEqual(output, '10 Mango added to order 3')
 
     def test_show_order_from_order_id(self):
-        output = process_command("SHOW ORDER [order_id")
+        output = process_command("SHOW_ORDER 1")
         self.assertEqual(output, 'Order 1 DRAFT 28\nApples 15 DRAFT\nOranges 10 DRAFT\nPears 3 DRAFT')
 
     def test_show_all_orders(self):
-        output = process_command("SHOW ORDERS")
-        self.assertEqual(output, 'Order 1 DRAFT 28\nApples 15 DRAFT\nOranges 10 DRAFT\nPears 3 DRAFT\nOrder 2 DRAFT 41\nApples 12 DRAFT\nPeaches 9 DRAFT\nPlums 20 DRAFT\nBananas 5 DRAFT\nOrder 3 DRAFT 23\n Apples 15 DRAFT\nBlueberries 8 DRAFT')
+        output = process_command("SHOW_ORDERS")
+        self.assertEqual(output, 'Order 1 DRAFT 28\nApples 15 DRAFT\nOranges 10 DRAFT\nPears 3 DRAFT\nOrder 2 DRAFT 46\nApples 12 DRAFT\nBananas 5 DRAFT\nPeaches 9 DRAFT\nPlums 20 DRAFT\nOrder 3 DRAFT 23\nApples 15 DRAFT\nBlueberries 8 DRAFT')
 
 
 

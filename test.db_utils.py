@@ -1,11 +1,10 @@
 import unittest
 import unittest.mock
-import io
-import sys
-import re
 import mysql.connector
 from config import HOST, USER, PASSWORD, DATABASE_NAME
-from db_utils import DbConnectionError, create_order, add_orderline, get_total_quantity_for_all_orders, get_total_quantity_for_order_id
+from db_utils import create_order_db, add_orderline, get_total_quantity_for_all_orders, get_total_quantity_for_order_id
+
+test_database_name = "test_order_management_2"
 class TestConnection(unittest.TestCase):
     connection = None
 
@@ -42,19 +41,12 @@ class TestDBFunctions(unittest.TestCase):
             self.connection.close()
 
     def test_create_order(self):
-        output = create_order()
+        output = create_order_db()
         self.assertRegex(output, 'Order created with id \\d')
 
     def test_add_orderline_output(self):
         output = add_orderline('Banana', 10, 4)
         self.assertEqual(output, '10 Banana added to order 4')
-
-    def test_add_orderline(self):
-        capturedOutput = io.StringIO()
-        sys.stdout = capturedOutput
-        add_orderline('Orange', 5, 13)
-        sys.stdout = sys.__stdout__
-        print('Captured', capturedOutput.getvalue())
 
 
 if __name__ == '__main__':
