@@ -2,7 +2,7 @@ import unittest
 import unittest.mock
 import mysql.connector
 from config import HOST, USER, PASSWORD, DATABASE_NAME
-from db_utils import create_order_db, add_orderline, get_total_quantity_for_all_orders, get_total_quantity_for_order_id
+from db_utils import create_order_db, add_order_line, get_total_quantity_for_all_orders, get_total_quantity_for_order_id
 
 test_database_name = "test_order_management_2"
 class TestConnection(unittest.TestCase):
@@ -44,8 +44,8 @@ class TestDBFunctions(unittest.TestCase):
         output = create_order_db()
         self.assertRegex(output, 'Order created with id \\d')
 
-    def test_add_orderline_output(self):
-        output = add_orderline('Banana', 10, 4)
+    def test_add_order_line_output(self):
+        output = add_order_line('Banana', 10, 4)
         self.assertEqual(output, '10 Banana added to order 4')
 
 

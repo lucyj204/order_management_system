@@ -33,6 +33,7 @@ class TestProcessCommand(unittest.TestCase):
                     product_name VARCHAR(100),
                     product_quantity SMALLINT UNSIGNED,
                     order_id MEDIUMINT UNSIGNED,
+                    status VARCHAR(10) DEFAULT 'DRAFT',
                     FOREIGN KEY (order_id) REFERENCES `order`(order_id));""")
                 cur.execute("""ALTER TABLE order_line ADD UNIQUE product_order_index (order_id, product_name)""")
                 cur.execute("""

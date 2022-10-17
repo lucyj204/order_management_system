@@ -1,8 +1,12 @@
 from contextlib import closing
+from collections import namedtuple
 import mysql.connector
 from config import USER, PASSWORD, HOST, DATABASE_NAME
 
 test_database_name = None
+
+Order = namedtuple('Order', ['id', 'status'])
+OrderLine = namedtuple('OrderLine', ['order_id', 'product_name', 'product_quantity', 'status'])
 
 def connect_to_db():
     cnx = mysql.connector.connect(
@@ -24,43 +28,49 @@ def create_order_db():
             db_connection.commit()
             return cur.lastrowid
 
-def add_orderline(product_name, product_quantity, order_id):
+def add_order_line(product_name, product_quantity, order_id):
     with closing(connect_to_db()) as db_connection:
         with closing(db_connection.cursor()) as cur:
             cur.execute("""
                 INSERT INTO order_line (product_name, product_quantity, order_id)
-                VALUES ('{product_name}', {product_quantity}, {order_id})
-            """.format(product_name=product_name, product_quantity=product_quantity, order_id=order_id))
+                VALUES (%(product_name)s, %(product_quantity)s, %(order_id)s)
+            """,
+            {'product_name': product_name, 'product_quantity': product_quantity, 'order_id': order_id})
             db_connection.commit()
-            return True
             #TODO: Think about how to handle errors from duplicate item entered to add to order
 
-def show_order(order_id):
+def get_order(order_id):
     with closing(connect_to_db()) as db_connection:
         with closing(db_connection.cursor()) as cur:
-            cur.execute("""
-                SELECT `order` . *, order_line . *
-                FROM `order`
-                INNER JOIN order_line
-                ON `order`.order_id = order_line.order_id
-                WHERE order_line.order_id = {order_id}
-            """.format(order_id=order_id))
-            result = cur.fetchall()
-            return result
-            #TODO: Handle errors if no products added to order ID
+            cur.execute(
+                """
+                    SELECT order_id, order_status
+                    FROM `order` 
+                    WHERE order_id = %(order_id)s
+                """,
+                {'order_id': order_id}
+            )
+            rows = cur.fetchall()
+            row = rows[0]
+            return Order(row[0], row[1])
 
-def show_orders():
+def get_order_lines(order_id):
+    '''
+    Returns a list of OrderLine
+    '''
     with closing(connect_to_db()) as db_connection:
         with closing(db_connection.cursor()) as cur:
-            cur.execute("""
-                SELECT ord.order_id, ord.order_status, ol.product_name, ol.product_quantity
-                FROM `order` ord
-                LEFT JOIN order_line ol ON ord.order_id = ol.order_id
-                WHERE ol.product_name IS NOT NULL
-                ORDER BY ord.order_id;
-            """)
-            result = cur.fetchall()
-            return result
+            cur.execute(
+                """
+                    SELECT order_id, product_name, product_quantity, status
+                    FROM order_line
+                    WHERE order_id = %(order_id)s
+                """,
+                {'order_id': order_id}
+            )
+            rows = cur.fetchall()
+            return [OrderLine(row[0], row[1], row[2], row[3]) for row in rows]
+            
 
 def get_order_ids_for_all_orders():
     # TODO: Improve to show all order ids - only showing those with products added at present
@@ -70,17 +80,6 @@ def get_order_ids_for_all_orders():
                 SELECT DISTINCT order_id 
                 FROM order_line
             """)
-            result = cur.fetchall()
-            return result
-
-def get_total_quantity_for_order_id(order_id):
-    with closing(connect_to_db()) as db_connection:
-        with closing(db_connection.cursor()) as cur:
-            cur.execute("""
-                SELECT SUM(product_quantity) AS total_quantity
-                FROM order_line
-                WHERE order_id = {order_id}
-            """.format(order_id=order_id))
-            result = cur.fetchall()
-            return result[0][0]
+            rows = cur.fetchall()
+            return [row[0] for row in rows]
 
