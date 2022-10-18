@@ -3,7 +3,7 @@ import unittest.mock
 import mysql.connector
 from config import HOST, USER, PASSWORD, DATABASE_NAME
 
-test_database_name = "test_order_management_2"
+test_database_name = "test_order_management"
 
 
 class TestConnection(unittest.TestCase):

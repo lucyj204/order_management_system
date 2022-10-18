@@ -5,7 +5,7 @@ from main import process_command
 import db_utils
 import mysql.connector
 
-test_database_name = "test_order_management_2"
+test_database_name = "test_order_management"
 
 
 class TestProcessCommand(unittest.TestCase):
@@ -17,15 +17,15 @@ class TestProcessCommand(unittest.TestCase):
             with closing(db_connection.cursor()) as cur:
                 cur.execute(
                     """
-                    DROP DATABASE IF EXISTS test_order_management_2"""
+                    DROP DATABASE IF EXISTS test_order_management"""
                 )
                 cur.execute(
                     """
-                    CREATE DATABASE test_order_management_2"""
+                    CREATE DATABASE test_order_management"""
                 )
                 cur.execute(
                     """ 
-                    USE test_order_management_2"""
+                    USE test_order_management"""
                 )
                 cur.execute(
                     """ 
@@ -68,7 +68,7 @@ class TestProcessCommand(unittest.TestCase):
                 )
                 db_connection.commit()
                 print("db created")
-        db_utils.test_database_name = "test_order_management_2"
+        db_utils.test_database_name = "test_order_management"
 
     def tearDown(self):
         cnx = mysql.connector.connect(
@@ -78,7 +78,7 @@ class TestProcessCommand(unittest.TestCase):
             with closing(db_connection.cursor()) as cur:
                 cur.execute(
                     """
-                    DROP DATABASE test_order_management_2
+                    DROP DATABASE test_order_management
                 """
                 )
                 db_connection.commit()

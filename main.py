@@ -1,7 +1,16 @@
 import shlex
 import db_utils
 
-inventory = ["Bananas", "Apples", "Oranges", "Pears", "Plums", "Peaches", "Mangos", "Blueberries"]
+inventory = [
+    "Bananas",
+    "Apples",
+    "Oranges",
+    "Pears",
+    "Plums",
+    "Peaches",
+    "Mangos",
+    "Blueberries",
+]
 
 
 def run():
