@@ -12,6 +12,9 @@ OrderLine = namedtuple(
 
 
 def connect_to_db():
+    """
+    Establishes connection with MySQL server and returns the connection
+    """
     cnx = mysql.connector.connect(
         host=HOST,
         user=USER,
@@ -23,6 +26,9 @@ def connect_to_db():
 
 
 def create_order_db():
+    """
+    Returns the ID of the created row from the DB
+    """
     with closing(connect_to_db()) as db_connection:
         with closing(db_connection.cursor()) as cur:
             cur.execute(
@@ -36,6 +42,10 @@ def create_order_db():
 
 
 def add_order_line(product_name, product_quantity, order_id):
+    """
+    Inserts new order line to the DB
+    """
+
     with closing(connect_to_db()) as db_connection:
         with closing(db_connection.cursor()) as cur:
             cur.execute(
@@ -50,10 +60,12 @@ def add_order_line(product_name, product_quantity, order_id):
                 },
             )
             db_connection.commit()
-            # TODO: Think about how to handle errors from duplicate item entered to add to order
 
 
 def get_order(order_id):
+    """
+    Returns Order object for single order
+    """
     with closing(connect_to_db()) as db_connection:
         with closing(db_connection.cursor()) as cur:
             cur.execute(
@@ -88,13 +100,15 @@ def get_order_lines(order_id):
 
 
 def get_order_ids_for_all_orders():
-    # TODO: Improve to show all order ids - only showing those with products added at present
+    """
+    Returns a list of order_id
+    """
     with closing(connect_to_db()) as db_connection:
         with closing(db_connection.cursor()) as cur:
             cur.execute(
                 """
                 SELECT DISTINCT order_id 
-                FROM order_line
+                FROM `order`
             """
             )
             rows = cur.fetchall()

@@ -90,7 +90,7 @@ class TestProcessCommand(unittest.TestCase):
         self.assertRegex(output, r"Order created with id \d+")
 
     def test_add_product_order(self):
-        output = process_command("ADD_PRODUCT_ORDER 3 Mango 10")
+        output = process_command("ADD_ORDERLINE 3 Mango 10")
         self.assertEqual(output, "10 Mango added to order 3")
 
     def test_show_order_from_order_id(self):
@@ -104,6 +104,41 @@ class TestProcessCommand(unittest.TestCase):
         self.assertEqual(
             output,
             "Order 1 DRAFT 28\nApples 15 DRAFT\nOranges 10 DRAFT\nPears 3 DRAFT\nOrder 2 DRAFT 46\nApples 12 DRAFT\nBananas 5 DRAFT\nPeaches 9 DRAFT\nPlums 20 DRAFT\nOrder 3 DRAFT 23\nApples 15 DRAFT\nBlueberries 8 DRAFT",
+        )
+
+    def test_returns_error_if_args_given_to_create_order(self):
+        output = process_command("CREATE_ORDER 1")
+        self.assertEqual(
+            output,
+            "Please check your input and try again:\nCREATE_ORDER should not take any arguments",
+        )
+
+    def test_returns_error_if_args_missing_from_add_order_line(self):
+        output = process_command("ADD_ORDERLINE Mango 3")
+        self.assertEqual(
+            output,
+            "Please check your input and try again:\nADD_ORDERLINE must be provided with product_name, product_quantity and order_id",
+        )
+
+    def test_returns_error_if_args_missing_from_show_order(self):
+        output = process_command("SHOW_ORDER")
+        self.assertEqual(
+            output,
+            "Please check your input and try again:\nSHOW_ORDER must take one argument of an order_id",
+        )
+
+    def test_returns_error_if_additional_args_given_to_show_order(self):
+        output = process_command("SHOW_ORDER 1 Banana")
+        self.assertEqual(
+            output,
+            "Please check your input and try again:\nSHOW_ORDER must take one argument of an order_id",
+        )
+
+    def test_returns_error_if_args_given_to_show_orders(self):
+        output = process_command("SHOW_ORDERS 1")
+        self.assertEqual(
+            output,
+            "Please check your input and try again:\nSHOW_ORDERS should not take any arguments",
         )
 
 
